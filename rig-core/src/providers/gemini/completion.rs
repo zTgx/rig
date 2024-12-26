@@ -75,6 +75,12 @@ impl completion::CompletionModel for CompletionModel {
             generation_config.max_output_tokens = Some(max_tokens);
         }
 
+        // zTgx TODO:
+        // println!(">>> tools: {:?}", completion_request.tools);
+        let tools_value = serde_json::json!({
+            "function_declarations": completion_request.tools
+        });
+
         let request = GenerateContentRequest {
             contents: full_history
                 .into_iter()
@@ -94,11 +100,15 @@ impl completion::CompletionModel for CompletionModel {
             generation_config: Some(generation_config),
             safety_settings: None,
             tools: Some(
-                completion_request
-                    .tools
-                    .into_iter()
-                    .map(Tool::from)
-                    .collect(),
+
+                // zTgx TODO:
+                // completion_request
+                //     .tools
+                //     .into_iter()
+                //     .map(Tool::from)
+                //     .collect(),
+
+                tools_value
             ),
             tool_config: None,
             system_instruction: Some(Content {
@@ -138,18 +148,19 @@ impl completion::CompletionModel for CompletionModel {
     }
 }
 
-impl From<completion::ToolDefinition> for Tool {
-    fn from(tool: completion::ToolDefinition) -> Self {
-        Self {
-            function_declaration: FunctionDeclaration {
-                name: tool.name,
-                description: tool.description,
-                parameters: None, // tool.parameters, TODO: Map Gemini
-            },
-            code_execution: None,
-        }
-    }
-}
+// zTgx TODO:
+// impl From<completion::ToolDefinition> for Tool {
+//     fn from(tool: completion::ToolDefinition) -> Self {
+//         Self {
+//             function_declaration: FunctionDeclaration {
+//                 name: tool.name,
+//                 description: tool.description,
+//                 parameters: None, // tool.parameters, TODO: Map Gemini
+//             },
+//             code_execution: None,
+//         }
+//     }
+// }
 
 impl TryFrom<GenerateContentResponse> for completion::CompletionResponse<GenerateContentResponse> {
     type Error = CompletionError;
@@ -632,7 +643,11 @@ pub mod gemini_api_types {
     #[serde(rename_all = "camelCase")]
     pub struct GenerateContentRequest {
         pub contents: Vec<Content>,
-        pub tools: Option<Vec<Tool>>,
+
+        // zTgx TODO:
+        // pub tools: Option<Vec<Tool>>,
+        pub tools: Option<serde_json::Value>,
+
         pub tool_config: Option<ToolConfig>,
         /// Optional. Configuration options for model generation and outputs.
         pub generation_config: Option<GenerationConfig>,
@@ -659,7 +674,10 @@ pub mod gemini_api_types {
     #[derive(Debug, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Tool {
-        pub function_declaration: FunctionDeclaration,
+        // pub function_declaration: FunctionDeclaration,
+
+        // zTgx TODO:
+        pub function_declarations: Vec<FunctionDeclaration>,
         pub code_execution: Option<CodeExecution>,
     }
 
@@ -668,7 +686,9 @@ pub mod gemini_api_types {
     pub struct FunctionDeclaration {
         pub name: String,
         pub description: String,
-        pub parameters: Option<Vec<Schema>>,
+        // pub parameters: Option<Vec<Schema>>,
+        //zTgx TODO:
+        pub parameters: Option<Value>,
     }
 
     #[derive(Debug, Serialize)]
